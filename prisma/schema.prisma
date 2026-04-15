@@ -25,6 +25,8 @@ model User {
   verificationNote    String?  // 管理員審核備註
   onboardingCompleted Boolean  @default(false) // 是否完成新手引導
   preferences         String   @default("[]")  // JSON：游牧偏好標籤 (tenant) 或 房源類型 (landlord)
+  googleId            String?  @unique          // Google OAuth UID
+  authProvider        String   @default("email") // email | google | both
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
