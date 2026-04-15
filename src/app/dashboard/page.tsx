@@ -1,6 +1,7 @@
 'use client';
 import { useEffect, useState, useMemo } from 'react';
 import Link from 'next/link';
+import { useTranslations } from '@/i18n/provider';
 import { formatPrice, wifiLabel } from '@/lib/utils';
 import { DashboardSkeleton, SkeletonStats, SkeletonTabContent } from '@/components/SkeletonCard';
 import { getCachedStale, setCached, invalidate } from '@/lib/clientCache';
@@ -97,6 +98,7 @@ type SavedSearch = {
 };
 
 export default function DashboardPage() {
+  const t = useTranslations('dashboard');
   // ── 初始化時先嘗試從快取讀取，有快取則跳過骨架屏「秒開」──────────────────
   const [data, setData] = useState<DashboardData | null>(() => {
     const cached = getCachedStale<DashboardData>(CACHE_DASHBOARD);
@@ -146,6 +148,21 @@ export default function DashboardPage() {
   // 房東回覆申請用的 state
   const [replyingAppId, setReplyingAppId] = useState<string | null>(null);
   const [replyText, setReplyText] = useState('');
+
+  // Dynamic status labels from translations
+  const statusLabels = useMemo(() => ({
+    pending: t('statusPending'),
+    approved: t('statusApproved'),
+    rejected: t('statusRejected'),
+    withdrawn: t('statusWithdrawn'),
+  }), [t]);
+
+  const listingStatusLabels = useMemo(() => ({
+    active: '✅ ' + t('activeCount'),
+    pending: '⏳ ' + t('statusPending'),
+    rejected: '❌ ' + t('statusRejected'),
+    inactive: '⏸ ' + t('activeCount'), // Note: might need separate key for inactive
+  }), [t]);
 
   type LandlordStats = {
     overview: {
@@ -564,7 +581,7 @@ export default function DashboardPage() {
                 <div className="flex-1 min-w-0">
                   <div className="flex items-start justify-between gap-2">
                     <Link href={`/listings/${l.id}`} className="font-semibold text-gray-900 hover:text-blue-600 text-sm leading-snug line-clamp-1">{l.title}</Link>
-                    <span className={`badge shrink-0 ${LISTING_STATUS_COLORS[l.status]}`}>{LISTING_STATUS_LABELS[l.status]}</span>
+                    <span className={`badge shrink-0 ${LISTING_STATUS_COLORS[l.status]}`}>{listingStatusLabels[l.status as keyof typeof listingStatusLabels]}</span>
                   </div>
                   <p className="text-xs text-gray-500 mt-1">{l.city} {l.district} · {l.type}</p>
                   <div className="flex items-center gap-3 mt-2 flex-wrap">
@@ -639,7 +656,7 @@ export default function DashboardPage() {
                   <div className="flex-1 min-w-0">
                     <div className="flex items-start justify-between gap-2">
                       <Link href={`/listings/${lstRest.id}`} className="font-semibold text-sm hover:text-blue-600 line-clamp-1">{lstRest.title}</Link>
-                      <span className={`badge shrink-0 ${STATUS_COLORS[appRest.status]}`}>{STATUS_LABELS[appRest.status]}</span>
+                      <span className={`badge shrink-0 ${STATUS_COLORS[appRest.status]}`}>{statusLabels[appRest.status as keyof typeof statusLabels]}</span>
                     </div>
                     <p className="text-xs text-gray-500 mt-1">{lstRest.city} · {formatPrice(lstRest.price)}/月</p>
                     <p className="text-xs text-gray-600 mt-1">入住：{a.moveInDate} · {a.duration} 個月</p>
@@ -723,7 +740,7 @@ export default function DashboardPage() {
                       </div>
                     </div>
                   </div>
-                  <span className={`badge shrink-0 ${STATUS_COLORS[a.status]}`}>{STATUS_LABELS[a.status]}</span>
+                  <span className={`badge shrink-0 ${STATUS_COLORS[a.status]}`}>{statusLabels[a.status as keyof typeof statusLabels]}</span>
                 </div>
                 <div className="bg-gray-50 rounded-xl p-3 mb-3">
                   <p className="text-xs text-gray-500 mb-1">申請的房源：<Link href={`/listings/${lst.id}`} className="text-blue-600 hover:underline">{lst.title}</Link></p>

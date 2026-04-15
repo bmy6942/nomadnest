@@ -288,7 +288,7 @@
   },
   "dashboard": {
     "title": "房東後台",
-    "myListings": "我的房源",
+    "myListings": "我的房源 ({n})",
     "addListing": "新增房源",
     "totalListings": "總房源數",
     "activeListings": "上架中",
@@ -303,7 +303,21 @@
       "active": "上架中",
       "inactive": "已下架",
       "draft": "草稿"
-    }
+    },
+    "myApplications": "我的申請 ({n})",
+    "incomingApplications": "收到的申請 ({n})",
+    "viewingSchedule": "看房預約 ({n})",
+    "statusPending": "⏳ 待審核",
+    "statusApproved": "✅ 已接受",
+    "statusRejected": "❌ 已婉拒",
+    "statusWithdrawn": "↩ 已撤回",
+    "markAsRented": "標記已租出",
+    "myListingsCount": "我的房源",
+    "activeCount": "上架中",
+    "myApplicationCount": "我的申請",
+    "pendingApplicationCount": "待審申請",
+    "noApplications": "尚無申請記錄",
+    "noViewings": "尚無看房預約"
   },
   "profile": {
     "title": "個人設定",

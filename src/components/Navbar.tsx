@@ -33,6 +33,7 @@ function clearHistory() {
 // ── Global Search Bar ──────────────────────────────────────────────────────────
 
 function GlobalSearch() {
+  const t = useTranslations('nav');
   const router = useRouter();
   const [q, setQ]                   = useState('');
   const [open, setOpen]             = useState(false);
@@ -133,7 +134,7 @@ function GlobalSearch() {
           onChange={e => handleChange(e.target.value)}
           onFocus={() => { setOpen(true); setHistory(getHistory()); }}
           onKeyDown={handleKeyDown}
-          placeholder="搜尋房源…"
+          placeholder={t('searchPlaceholder')}
           className="w-44 focus:w-56 pl-8 pr-7 py-1.5 text-sm rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:border-blue-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 transition-all duration-200"
           autoComplete="off"
         />
@@ -159,12 +160,12 @@ function GlobalSearch() {
           {!q.trim() && history.length > 0 && (
             <>
               <div className="flex items-center justify-between px-3 pt-2.5 pb-1">
-                <span className="text-xs font-semibold text-gray-400 uppercase tracking-wide">最近搜尋</span>
+                <span className="text-xs font-semibold text-gray-400 uppercase tracking-wide">{t('recentSearches')}</span>
                 <button
                   onClick={() => { clearHistory(); setHistory([]); }}
                   aria-label="清除搜尋紀錄 / Clear search history"
                   className="text-xs text-gray-400 hover:text-gray-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 rounded">
-                  <span aria-hidden="true">清除</span>
+                  <span aria-hidden="true">{t('clearHistory')}</span>
                 </button>
               </div>
               {history.map((h, i) => (
@@ -184,11 +185,11 @@ function GlobalSearch() {
           {q.trim() && results.length === 0 && !loading && (
             <div className="px-4 py-6 text-center">
               <div className="text-2xl mb-1">🔍</div>
-              <p className="text-sm text-gray-500">找不到「{q}」的相關房源</p>
+              <p className="text-sm text-gray-500">{t('noResults')}</p>
               <button
                 onClick={() => handleSubmit()}
                 className="mt-2 text-xs text-blue-600 hover:underline">
-                搜尋全部房源
+                {t('viewMore')}
               </button>
             </div>
           )}
@@ -231,7 +232,7 @@ function GlobalSearch() {
             <button
               onClick={() => handleSubmit()}
               className="w-full text-center text-xs text-blue-600 hover:bg-blue-50 py-2.5 border-t border-gray-100 transition-colors">
-              查看所有「{q}」的房源 →
+              {t('viewMore')} →
             </button>
           )}
         </div>
@@ -331,7 +332,7 @@ export default function Navbar() {
           <Link href="/listings" aria-current={pathname.startsWith('/listings') ? 'page' : undefined} className="text-gray-600 hover:text-blue-600 font-medium text-sm whitespace-nowrap">{t('browse')}</Link>
           {/* 未登入 或 tenant 身份 → 顯示招商連結 */}
           {(!user || user.role === 'tenant') && (
-            <Link href="/for-landlords" aria-current={pathname.startsWith('/for-landlords') ? 'page' : undefined} className="text-gray-600 hover:text-blue-600 font-medium text-sm whitespace-nowrap">🏠 房東出租</Link>
+            <Link href="/for-landlords" aria-current={pathname.startsWith('/for-landlords') ? 'page' : undefined} className="text-gray-600 hover:text-blue-600 font-medium text-sm whitespace-nowrap">🏠 {t('forLandlords')}</Link>
           )}
           {(user?.role === 'landlord' || user?.role === 'admin') && (
             <Link href="/submit" aria-current={pathname.startsWith('/submit') ? 'page' : undefined} className="text-gray-600 hover:text-blue-600 font-medium text-sm whitespace-nowrap">{t('listYourPlace')}</Link>

@@ -288,7 +288,7 @@
   },
   "dashboard": {
     "title": "Landlord Dashboard",
-    "myListings": "My Listings",
+    "myListings": "My Listings ({n})",
     "addListing": "Add Listing",
     "totalListings": "Total Listings",
     "activeListings": "Active",
@@ -303,7 +303,21 @@
       "active": "Active",
       "inactive": "Inactive",
       "draft": "Draft"
-    }
+    },
+    "myApplications": "My Applications ({n})",
+    "incomingApplications": "Incoming Applications ({n})",
+    "viewingSchedule": "Viewings ({n})",
+    "statusPending": "⏳ Pending",
+    "statusApproved": "✅ Accepted",
+    "statusRejected": "❌ Declined",
+    "statusWithdrawn": "↩ Withdrawn",
+    "markAsRented": "Mark as Rented",
+    "myListingsCount": "My Listings",
+    "activeCount": "Active",
+    "myApplicationCount": "My Applications",
+    "pendingApplicationCount": "Pending Applications",
+    "noApplications": "No applications yet",
+    "noViewings": "No viewings scheduled"
   },
   "profile": {
     "title": "Profile Settings",

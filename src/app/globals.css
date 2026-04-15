@@ -143,6 +143,41 @@
 }
 .dark .btn-secondary:hover { background: #334155; }
 
+/* ─── Dark Mode: Tailwind text color overrides ──────────────────────────────
+   補充 Tailwind utility classes 的 dark mode 支援
+   讓未加 dark: variant 的元素在暗黑模式下也能正確顯示
+   ─────────────────────────────────────────────────────────────────────────── */
+.dark .text-gray-900 { color: #f1f5f9 }
+.dark .text-gray-800 { color: #e2e8f0 }
+.dark .text-gray-700 { color: #cbd5e1 }
+.dark .text-gray-600 { color: #94a3b8 }
+.dark .text-gray-500 { color: #64748b }
+/* nomad-navy (#1B3A5C) is near-black — render as light blue in dark mode */
+.dark .text-nomad-navy { color: #93c5fd }
+/* Border overrides */
+.dark .border-gray-200 { border-color: #334155 }
+.dark .border-gray-100 { border-color: #1e293b }
+/* Background overrides for common light surfaces */
+.dark .bg-white { background-color: #1e293b }
+.dark .bg-gray-50 { background-color: #0f172a }
+.dark .bg-gray-100 { background-color: #1e293b }
+/* Status badge text fixes */
+.dark .text-yellow-700 { color: #fde68a }
+.dark .text-green-700  { color: #86efac }
+.dark .text-red-700    { color: #fca5a5 }
+.dark .text-blue-700   { color: #93c5fd }
+/* Status badge bg fixes */
+.dark .bg-yellow-100 { background-color: #422006 }
+.dark .bg-green-100  { background-color: #052e16 }
+.dark .bg-red-100    { background-color: #450a0a }
+.dark .bg-blue-100   { background-color: #172554 }
+.dark .bg-amber-50   { background-color: #451a03 }
+/* Gradient backgrounds */
+.dark .from-blue-50  { --tw-gradient-from: #172554 }
+.dark .to-indigo-50  { --tw-gradient-to: #1e1b4b }
+.dark .from-green-50 { --tw-gradient-from: #052e16 }
+.dark .to-emerald-50 { --tw-gradient-to: #022c22 }
+
 .badge {
   display: inline-flex;
   align-items: center;
