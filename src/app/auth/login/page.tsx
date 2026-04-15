@@ -2,6 +2,7 @@
 import { useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
+import { useTranslations } from '@/i18n/provider';
 
 function LoginContent() {
   const [form, setForm] = useState({ email: '', password: '' });
@@ -9,6 +10,7 @@ function LoginContent() {
   const [loading, setLoading] = useState(false);
   const router = useRouter();
   const searchParams = useSearchParams();
+  const t = useTranslations('auth');
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -21,7 +23,6 @@ function LoginContent() {
     setLoading(false);
     if (res.ok) {
       if (data.emailPending) {
-        // 登入成功但 Email 尚未驗證 → 先跳驗證提示頁（已登入，頁面可自動填入 email）
         router.push('/auth/verify-email');
         router.refresh();
       } else {
@@ -30,7 +31,7 @@ function LoginContent() {
         router.refresh();
       }
     } else {
-      setError(data.error || '登入失敗');
+      setError(data.error || t('loginFailed'));
     }
   };
 
@@ -42,21 +43,21 @@ function LoginContent() {
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50 flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <Link href="/" aria-label="NomadNest Taiwan — 回首頁" className="text-4xl focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:rounded-md focus-visible:outline-none">🏡</Link>
-          <h1 className="text-2xl font-bold text-nomad-navy mt-3">歡迎回來</h1>
-          <p className="text-gray-500 text-sm mt-1">登入你的 NomadNest 帳號</p>
+          <Link href="/" aria-label="NomadNest Taiwan" className="text-4xl focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:rounded-md focus-visible:outline-none">🏡</Link>
+          <h1 className="text-2xl font-bold text-nomad-navy mt-3">{t('welcomeBack')}</h1>
+          <p className="text-gray-500 text-sm mt-1">{t('loginSubtitle')}</p>
         </div>
 
         <div className="card p-8">
           {/* Quick Login (for testing) */}
           <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-6">
-            <p className="text-xs font-bold text-amber-700 mb-2">🧪 測試帳號快速登入</p>
+            <p className="text-xs font-bold text-amber-700 mb-2">🧪 {t('testAccounts')}</p>
             <div className="grid grid-cols-2 gap-2">
               {[
-                { label: '管理員', email: 'admin@nomadnest.tw', pass: 'admin123' },
-                { label: '房東（陳大明）', email: 'landlord1@test.com', pass: 'test123' },
-                { label: '租客（Sarah）', email: 'sarah@test.com', pass: 'test123' },
-                { label: '租客（Thomas）', email: 'thomas@test.com', pass: 'test123' },
+                { label: t('adminAccount'), email: 'admin@nomadnest.tw', pass: 'admin123' },
+                { label: t('landlordAccount'), email: 'landlord1@test.com', pass: 'test123' },
+                { label: t('tenantSarah'), email: 'sarah@test.com', pass: 'test123' },
+                { label: t('tenantThomas'), email: 'thomas@test.com', pass: 'test123' },
               ].map(a => (
                 <button key={a.email} onClick={() => quickLogin(a.email, a.pass)}
                   className="text-xs bg-white border border-amber-200 hover:bg-amber-50 text-amber-800 px-2 py-1.5 rounded-lg transition-colors text-left">
@@ -77,12 +78,12 @@ function LoginContent() {
               <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/>
               <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
             </svg>
-            使用 Google 帳號登入
+            {t('loginWithGoogle')}
           </a>
 
           <div className="relative mb-4">
             <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-gray-200" /></div>
-            <div className="relative flex justify-center text-xs text-gray-400 bg-white px-3">或使用 Email 登入</div>
+            <div className="relative flex justify-center text-xs text-gray-400 bg-white px-3">{t('orWithEmail')}</div>
           </div>
 
           <form onSubmit={submit} className="space-y-4" noValidate>
@@ -108,8 +109,8 @@ function LoginContent() {
 
             <div>
               <div className="flex items-center justify-between mb-1">
-                <label htmlFor="login-password" className="block text-sm font-medium text-gray-700">密碼</label>
-                <Link href="/auth/forgot-password" className="text-xs text-blue-600 hover:underline">忘記密碼？</Link>
+                <label htmlFor="login-password" className="block text-sm font-medium text-gray-700">{t('password')}</label>
+                <Link href="/auth/forgot-password" className="text-xs text-blue-600 hover:underline">{t('forgotPassword')}</Link>
               </div>
               <input
                 id="login-password"
@@ -124,12 +125,12 @@ function LoginContent() {
             </div>
 
             <button type="submit" disabled={loading} className="btn-primary w-full py-3">
-              {loading ? '登入中...' : '登入'}
+              {loading ? t('loggingIn') : t('loginButton')}
             </button>
           </form>
 
           <p className="text-center text-sm text-gray-500 mt-5">
-            還沒有帳號？<Link href="/auth/register" className="text-blue-600 hover:underline font-medium">立即註冊</Link>
+            {t('noAccount')}<Link href="/auth/register" className="text-blue-600 hover:underline font-medium ml-1">{t('registerNow')}</Link>
           </p>
         </div>
       </div>
@@ -139,7 +140,7 @@ function LoginContent() {
 
 export default function LoginPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen flex items-center justify-center text-gray-400">載入中...</div>}>
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center text-gray-400">Loading…</div>}>
       <LoginContent />
     </Suspense>
   );

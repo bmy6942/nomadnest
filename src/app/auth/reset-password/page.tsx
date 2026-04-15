@@ -2,12 +2,14 @@
 import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
+import { useTranslations } from '@/i18n/provider';
 
 function ResetPasswordForm() {
   const router = useRouter();
   const params = useSearchParams();
   const token = params.get('token') || '';
   const uid = params.get('uid') || '';
+  const t = useTranslations('auth');
 
   const [form, setForm] = useState({ password: '', confirm: '' });
   const [loading, setLoading] = useState(false);
@@ -16,8 +18,8 @@ function ResetPasswordForm() {
   const [strength, setStrength] = useState(0); // 0-4
 
   useEffect(() => {
-    if (!token || !uid) setError('重設連結無效，請重新申請。');
-  }, [token, uid]);
+    if (!token || !uid) setError(t('invalidLink'));
+  }, [token, uid, t]);
 
   // 密碼強度檢查
   useEffect(() => {
@@ -30,17 +32,17 @@ function ResetPasswordForm() {
     setStrength(p.length === 0 ? 0 : score);
   }, [form.password]);
 
-  const strengthLabel = ['', '弱', '普通', '良好', '強'][strength];
-  const strengthColor = ['', 'bg-red-400', 'bg-yellow-400', 'bg-blue-400', 'bg-green-500'][strength];
+  const strengthLabels = ['', t('strengthWeak'), t('strengthFair'), t('strengthGood'), t('strengthStrong')];
+  const strengthColors = ['', 'bg-red-400', 'bg-yellow-400', 'bg-blue-400', 'bg-green-500'];
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (form.password !== form.confirm) {
-      setError('兩次輸入的密碼不一致');
+      setError(t('passwordsNotMatch'));
       return;
     }
     if (form.password.length < 8) {
-      setError('密碼至少需要 8 個字元');
+      setError(t('passwordTooShort'));
       return;
     }
     setLoading(true);
@@ -56,10 +58,10 @@ function ResetPasswordForm() {
         setSuccess(true);
         setTimeout(() => router.push('/auth/login'), 3000);
       } else {
-        setError(data.error || '重設失敗，請重新申請');
+        setError(data.error || t('resetFailed'));
       }
     } catch {
-      setError('網路錯誤，請稍後再試');
+      setError(t('networkError'));
     }
     setLoading(false);
   };
@@ -69,19 +71,19 @@ function ResetPasswordForm() {
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
           <Link href="/" className="text-4xl">🏡</Link>
-          <h1 className="text-2xl font-bold text-nomad-navy mt-3">重設密碼</h1>
-          <p className="text-gray-500 text-sm mt-1">請輸入您的新密碼</p>
+          <h1 className="text-2xl font-bold text-nomad-navy mt-3">{t('resetTitle')}</h1>
+          <p className="text-gray-500 text-sm mt-1">{t('resetSubtitle')}</p>
         </div>
 
         <div className="card p-8">
           {success ? (
             <div className="text-center py-4">
               <div className="text-5xl mb-4">✅</div>
-              <h2 className="text-lg font-semibold text-gray-800 mb-2">密碼已重設成功！</h2>
-              <p className="text-gray-500 text-sm">即將自動跳轉到登入頁面...</p>
+              <h2 className="text-lg font-semibold text-gray-800 mb-2">{t('resetSuccess')}</h2>
+              <p className="text-gray-500 text-sm">{t('redirectingToLogin')}</p>
               <Link href="/auth/login"
                 className="mt-4 inline-block text-blue-600 hover:underline text-sm font-medium">
-                立即前往登入 →
+                {t('goToLogin')}
               </Link>
             </div>
           ) : (
@@ -89,25 +91,25 @@ function ResetPasswordForm() {
               {error && (
                 <div className="bg-red-50 border border-red-200 text-red-700 text-sm p-3 rounded-lg">
                   {error}
-                  {(error.includes('無效') || error.includes('過期')) && (
+                  {(error.includes('invalid') || error.includes('無效') || error.includes('expired') || error.includes('過期')) && (
                     <div className="mt-2">
                       <Link href="/auth/forgot-password" className="text-blue-600 hover:underline font-medium">
-                        重新申請重設連結 →
+                        {t('requestNewLink')}
                       </Link>
                     </div>
                   )}
                 </div>
               )}
 
-              {(!error || !error.includes('無效')) && (
+              {(!error || (!error.includes('invalid') && !error.includes('無效'))) && (
                 <>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">新密碼</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">{t('newPasswordLabel')}</label>
                     <input
                       type="password"
                       value={form.password}
                       onChange={e => setForm(f => ({ ...f, password: e.target.value }))}
-                      placeholder="至少 8 個字元"
+                      placeholder={t('atLeast8Chars')}
                       required
                       minLength={8}
                       className="input"
@@ -118,7 +120,7 @@ function ResetPasswordForm() {
                           {[1, 2, 3, 4].map(i => (
                             <div key={i}
                               className={`flex-1 rounded-full transition-colors ${
-                                i <= strength ? strengthColor : 'bg-gray-200'
+                                i <= strength ? strengthColors[strength] : 'bg-gray-200'
                               }`} />
                           ))}
                         </div>
@@ -126,19 +128,19 @@ function ResetPasswordForm() {
                           strength <= 1 ? 'text-red-500' : strength === 2 ? 'text-yellow-600' :
                           strength === 3 ? 'text-blue-500' : 'text-green-600'
                         }`}>
-                          密碼強度：{strengthLabel}
+                          {t('strengthLabel')} {strengthLabels[strength]}
                         </p>
                       </div>
                     )}
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">確認新密碼</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">{t('confirmNewPasswordLabel')}</label>
                     <input
                       type="password"
                       value={form.confirm}
                       onChange={e => setForm(f => ({ ...f, confirm: e.target.value }))}
-                      placeholder="再次輸入密碼"
+                      placeholder={t('enterAgain')}
                       required
                       className={`input ${
                         form.confirm && form.password !== form.confirm
@@ -147,19 +149,19 @@ function ResetPasswordForm() {
                       }`}
                     />
                     {form.confirm && form.password !== form.confirm && (
-                      <p className="text-xs text-red-500 mt-1">密碼不一致</p>
+                      <p className="text-xs text-red-500 mt-1">{t('passwordMismatchShort')}</p>
                     )}
                   </div>
 
                   <button type="submit" disabled={loading || !token || !uid}
                     className="btn-primary w-full py-3 disabled:opacity-50">
-                    {loading ? '重設中...' : '確認重設密碼'}
+                    {loading ? t('resetting') : t('confirmReset')}
                   </button>
                 </>
               )}
 
               <p className="text-center text-sm text-gray-500">
-                <Link href="/auth/login" className="text-blue-600 hover:underline font-medium">← 返回登入</Link>
+                <Link href="/auth/login" className="text-blue-600 hover:underline font-medium">{t('backToLoginLink')}</Link>
               </p>
             </form>
           )}
@@ -173,7 +175,7 @@ export default function ResetPasswordPage() {
   return (
     <Suspense fallback={
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50 flex items-center justify-center">
-        <p className="text-gray-500">載入中...</p>
+        <p className="text-gray-500">Loading...</p>
       </div>
     }>
       <ResetPasswordForm />

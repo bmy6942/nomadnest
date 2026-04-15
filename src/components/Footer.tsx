@@ -48,7 +48,7 @@ export default function Footer({ locale }: { locale: string }) {
             <ul className="space-y-1.5 text-gray-300 text-sm">
               <li>
                 <Link href="/for-landlords" className="hover:text-white transition-colors">
-                  🏠 房東招商說明
+                  {t('landlordInfo')}
                 </Link>
               </li>
               <li>
@@ -58,7 +58,7 @@ export default function Footer({ locale }: { locale: string }) {
               </li>
               <li>
                 <Link href="/pricing" className="hover:text-white transition-colors">
-                  定價方案
+                  {t('pricing')}
                 </Link>
               </li>
               <li>
@@ -75,7 +75,7 @@ export default function Footer({ locale }: { locale: string }) {
             <ul className="space-y-1.5 text-gray-300 text-sm">
               <li>
                 <Link href="/about" className="hover:text-white transition-colors">
-                  關於我們
+                  {t('aboutUs')}
                 </Link>
               </li>
               <li>
