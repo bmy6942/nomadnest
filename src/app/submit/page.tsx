@@ -107,7 +107,7 @@ export default function SubmitPage() {
               <p className="text-xs text-gray-400 mt-1">{form.title.length}/60 字元</p>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">城市 *</label>
                 <select value={form.city}
@@ -168,7 +168,7 @@ export default function SubmitPage() {
               )}
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">房型 *</label>
                 <select value={form.type} onChange={e => setForm(f => ({ ...f, type: e.target.value }))} className="input">
@@ -181,7 +181,7 @@ export default function SubmitPage() {
               </div>
             </div>
 
-            <div className="grid grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">押金（月）</label>
                 <select value={form.deposit} onChange={e => setForm(f => ({ ...f, deposit: e.target.value }))} className="input">
@@ -277,7 +277,7 @@ export default function SubmitPage() {
               <p className="text-xs text-gray-400 mt-1">1=非常暗 5=光線充足</p>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">捷運站步行（分鐘）</label>
                 <input type="number" value={form.nearMRT} onChange={e => setForm(f => ({ ...f, nearMRT: e.target.value }))} placeholder="5" className="input" />

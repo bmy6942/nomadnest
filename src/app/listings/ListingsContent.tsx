@@ -552,7 +552,7 @@ export default function ListingsContent() {
           {viewMode === 'map' && (
             <div className="flex gap-4 h-[70vh]">
               {/* Map */}
-              <div className="flex-1 rounded-2xl overflow-hidden shadow-sm border border-gray-200">
+              <div className="flex-1 rounded-2xl overflow-hidden shadow-sm border border-gray-200" style={{ isolation: 'isolate', position: 'relative' }}>
                 {loading ? (
                   <div className="flex items-center justify-center h-full bg-gray-100 text-gray-400">
                     <div className="text-center"><div className="text-3xl mb-2">🗺️</div>{t('mapLoading')}</div>

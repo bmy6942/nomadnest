@@ -272,7 +272,7 @@ export default function ProfilePage() {
       {errorMsg && <div className="bg-red-50 border border-red-200 text-red-700 text-sm p-3 rounded-xl mb-5">{errorMsg}</div>}
 
       {/* Tabs */}
-      <div className="flex gap-1 mb-6 bg-gray-100 p-1 rounded-xl">
+      <div className="flex gap-1 mb-6 bg-gray-100 p-1 rounded-xl overflow-x-auto">
         {[
           { key: 'info',     label: '👤 個人資料' },
           { key: 'password', label: '🔒 修改密碼' },
@@ -280,7 +280,7 @@ export default function ProfilePage() {
           { key: 'notifications', label: '🔔 通知設定' },
         ].map(t => (
           <button key={t.key} onClick={() => { setTab(t.key as typeof tab); setErrorMsg(''); }}
-            className={`flex-1 px-3 py-2 rounded-lg text-sm font-medium transition-all ${tab === t.key ? 'bg-white text-nomad-navy shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}>
+            className={`flex-1 shrink-0 px-1 sm:px-3 py-2 rounded-lg text-[11px] sm:text-sm font-medium transition-all whitespace-nowrap ${tab === t.key ? 'bg-white text-nomad-navy shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}>
             {t.label}
           </button>
         ))}
@@ -288,7 +288,7 @@ export default function ProfilePage() {
 
       {/* ── Info Tab ── */}
       {tab === 'info' && (
-        <div className="card p-6">
+        <div className="card p-4 sm:p-6">
           <form onSubmit={saveProfile} className="space-y-5">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Email <span className="text-gray-400 font-normal text-xs">（不可修改）</span></label>
@@ -320,7 +320,7 @@ export default function ProfilePage() {
 
       {/* ── Password Tab ── */}
       {tab === 'password' && (
-        <div className="card p-6">
+        <div className="card p-4 sm:p-6">
           <p className="text-sm text-gray-500 mb-5">請先確認目前的密碼，再設定新密碼。</p>
           <form onSubmit={savePassword} className="space-y-5">
             <div>
@@ -374,7 +374,7 @@ export default function ProfilePage() {
 
           {/* Upload form */}
           {(!profile.verified && profile.verificationStatus !== 'approved') && (
-            <div className="card p-6">
+            <div className="card p-4 sm:p-6">
               <h3 className="font-semibold text-gray-800 mb-4">
                 {profile.verificationStatus === 'rejected' ? '重新提交身份驗證' : '提交身份驗證申請'}
               </h3>

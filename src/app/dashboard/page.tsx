@@ -629,7 +629,7 @@ export default function DashboardPage() {
                 <Link href="/listings?foreignOk=true" className="btn-secondary text-sm">🌍 外籍友善房源</Link>
               </div>
               {/* 快速引導：三步驟 */}
-              <div className="mt-8 grid grid-cols-3 gap-4 text-center max-w-xs mx-auto">
+              <div className="mt-8 grid grid-cols-3 gap-2 sm:gap-4 text-center max-w-xs mx-auto">
                 {[
                   { step: '1', icon: '🔍', text: '搜尋房源' },
                   { step: '2', icon: '📋', text: '送出申請' },

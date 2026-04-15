@@ -297,7 +297,7 @@ export default async function ListingDetailPage({ params }: { params: { id: stri
           {listing.lat && listing.lng && (
             <div className="card p-5 mt-5">
               <h2 className="font-bold text-gray-800 mb-3">📍 房源位置</h2>
-              <div style={{ height: '280px' }}>
+              <div style={{ height: '280px', isolation: 'isolate', position: 'relative' }}>
                 <ListingMap lat={listing.lat} lng={listing.lng} title={listing.title} />
               </div>
               <p className="text-xs text-gray-400 mt-2">{listing.city}{listing.district}{listing.address}</p>
