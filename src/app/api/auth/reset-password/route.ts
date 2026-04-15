@@ -41,7 +41,7 @@ export async function POST(req: NextRequest) {
     // 先取得用戶的現有密碼 hash（作為 secret suffix）
     const user = await prisma.user.findUnique({
       where: { id: uid },
-      select: { id: true, email: true, password: true },
+      select: { id: true, email: true, password: true, verificationStatus: true },
     });
 
     if (!user) {
@@ -61,11 +61,17 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: '重設連結無效' }, { status: 400 });
     }
 
-    // 更新密碼
+    // 更新密碼，並同時將 emailPending 改為 none（重設密碼連結即可確認 email 所有權）
     const hashed = await bcrypt.hash(password, 12);
     await prisma.user.update({
       where: { id: user.id },
-      data: { password: hashed },
+      data: {
+        password: hashed,
+        // 若尚未驗證 email，重設密碼成功即代表確認了 email 所有權
+        ...(user.verificationStatus === 'emailPending'
+          ? { verificationStatus: 'none' }
+          : {}),
+      },
     });
 
     return NextResponse.json({ message: '密碼已成功重設，請重新登入。' });
