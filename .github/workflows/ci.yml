@@ -1,0 +1,207 @@
+# ────────────────────────────────────────────────────────────────────────────
+# NomadNest Taiwan — CI 品質閘門 (Quality Gate)
+#
+# 觸發條件：
+#   - 每個 PR 合併至 main / develop 前必須全過
+#   - push 到 main / develop 也會觸發（部署前最後把關）
+#
+# 作業（並行）：
+#   1. typecheck   — TypeScript tsc --noEmit
+#   2. lint        — ESLint (next lint)
+#   3. test        — Vitest 單元測試 + 覆蓋率報告
+#
+# 作業（依賴上方三項）：
+#   4. build       — Next.js 正式建置，驗證不因型別/語法錯誤而炸掉
+# ────────────────────────────────────────────────────────────────────────────
+name: CI
+
+on:
+  push:
+    branches: [main, develop]
+    paths-ignore:
+      - '**.md'
+      - '.github/PULL_REQUEST_TEMPLATE.md'
+      - 'docs/**'
+  pull_request:
+    branches: [main, develop]
+    paths-ignore:
+      - '**.md'
+      - '.github/PULL_REQUEST_TEMPLATE.md'
+      - 'docs/**'
+
+# 同分支/PR 有新的 push 時自動取消舊的執行（節省 runner 用量）
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  NODE_VERSION: '20'
+  # 讓 Next.js build 不送遙測資料到 Vercel
+  NEXT_TELEMETRY_DISABLED: '1'
+
+jobs:
+  # ── 1. TypeScript 型別檢查 ──────────────────────────────────────────────────
+  typecheck:
+    name: 🔷 TypeScript
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Generate Prisma client
+        run: npx prisma generate
+
+      - name: TypeScript check
+        run: npm run typecheck
+
+  # ── 2. ESLint 程式碼品質 ────────────────────────────────────────────────────
+  lint:
+    name: 🔍 ESLint
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Generate Prisma client
+        run: npx prisma generate
+
+      - name: Lint
+        run: npm run lint
+
+  # ── 3. 單元測試 + 覆蓋率 ────────────────────────────────────────────────────
+  test:
+    name: 🧪 Unit Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Generate Prisma client
+        run: npx prisma generate
+
+      - name: Run unit tests with coverage
+        run: npm run test:coverage
+
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: coverage-report-${{ github.sha }}
+          path: coverage/
+          retention-days: 14
+
+      # 覆蓋率摘要寫入 PR 評論（僅 PR 時執行）
+      - name: Coverage summary comment
+        uses: davelosert/vitest-coverage-report-action@v2
+        if: github.event_name == 'pull_request'
+        with:
+          json-summary-path: coverage/coverage-summary.json
+          json-final-path: coverage/coverage-final.json
+        continue-on-error: true  # 若 action 本身有問題不阻擋 CI
+
+  # ── 4. Next.js Build（依賴上方三項全部通過）──────────────────────────────────
+  build:
+    name: 🏗 Build
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    needs: [typecheck, lint, test]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Generate Prisma client
+        run: npx prisma generate
+
+      # ── Next.js 建置快取（大幅縮短重建時間）────────────────────────────────
+      - name: Cache Next.js build
+        uses: actions/cache@v4
+        with:
+          path: |
+            .next/cache
+          key: nextjs-${{ runner.os }}-${{ hashFiles('package-lock.json') }}-${{ hashFiles('src/**/*.ts', 'src/**/*.tsx') }}
+          restore-keys: |
+            nextjs-${{ runner.os }}-${{ hashFiles('package-lock.json') }}-
+            nextjs-${{ runner.os }}-
+
+      - name: Build
+        run: npm run build
+        env:
+          DATABASE_URL: file:./prisma/dev.db
+          JWT_SECRET: ci-build-secret-not-for-production
+          NEXT_PUBLIC_BASE_URL: https://nomadnest.tw
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        if: success()
+        with:
+          name: nextjs-build-${{ github.sha }}
+          path: |
+            .next/
+            !.next/cache
+          retention-days: 3
+
+  # ── 5. CI 結果彙整（Branch Protection Rules 可設定此 Job）──────────────────
+  ci-success:
+    name: ✅ CI Passed
+    runs-on: ubuntu-latest
+    needs: [typecheck, lint, test, build]
+    if: always()
+
+    steps:
+      - name: Check all jobs succeeded
+        run: |
+          if [[ "${{ needs.typecheck.result }}" != "success" || \
+                "${{ needs.lint.result }}"      != "success" || \
+                "${{ needs.test.result }}"      != "success" || \
+                "${{ needs.build.result }}"     != "success" ]]; then
+            echo "❌ CI failed:"
+            echo "  typecheck : ${{ needs.typecheck.result }}"
+            echo "  lint      : ${{ needs.lint.result }}"
+            echo "  test      : ${{ needs.test.result }}"
+            echo "  build     : ${{ needs.build.result }}"
+            exit 1
+          fi
+          echo "✅ All CI checks passed!"

@@ -1,0 +1,54 @@
+# ─── 依賴套件 ───────────────────────────────────────────────
+node_modules/
+.pnp
+.pnp.js
+
+# ─── Next.js 建置輸出 ─────────────────────────────────────
+.next/
+out/
+build/
+
+# ─── 環境變數（機密，絕不上傳）────────────────────────────
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# ─── 本地開發資料庫 ───────────────────────────────────────
+prisma/dev.db
+prisma/dev.db-journal
+prisma/dev.db-shm
+prisma/dev.db-wal
+
+# ─── 本地 migration SQL（僅供手動執行，不需版控）──────────
+prisma/neon-migration.sql
+
+# ─── 上傳暫存 ────────────────────────────────────────────
+uploads/
+
+# ─── 系統與編輯器 ─────────────────────────────────────────
+.DS_Store
+Thumbs.db
+*.pem
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# ─── 測試覆蓋率 ──────────────────────────────────────────
+coverage/
+*.lcov
+
+# ─── TypeScript 暫存 ────────────────────────────────────
+*.tsbuildinfo
+next-env.d.ts
+
+# ─── Vercel ───────────────────────────────────────────────
+.vercel
+
+# ─── Log ──────────────────────────────────────────────────
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*

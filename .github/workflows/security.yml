@@ -1,0 +1,181 @@
+# ────────────────────────────────────────────────────────────────────────────
+# NomadNest Taiwan — 安全性稽核
+#
+# 觸發條件：
+#   - 每週一早上 9:00 UTC（自動定期掃描）
+#   - push 到 main（每次合併後立即檢查）
+#   - 手動觸發
+#
+# 作業：
+#   1. dependency-audit  — npm audit 弱點掃描（critical/high 阻擋）
+#   2. license-check     — 檢查套件授權合規性
+# ────────────────────────────────────────────────────────────────────────────
+name: Security Audit
+
+on:
+  schedule:
+    # 每週一 09:00 UTC（= 台灣時間 17:00）
+    - cron: '0 9 * * 1'
+  push:
+    branches: [main]
+    paths:
+      - 'package.json'
+      - 'package-lock.json'
+  workflow_dispatch:
+
+env:
+  NODE_VERSION: '20'
+
+jobs:
+  # ── 1. npm 弱點稽核 ──────────────────────────────────────────────────────────
+  dependency-audit:
+    name: 🔒 npm audit
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      # critical / high 等級弱點視為 CI 失敗
+      - name: Run npm audit (critical + high)
+        id: audit
+        run: |
+          npm audit --audit-level=high --json > audit-report.json || true
+          # 解析並呈現摘要
+          node -e "
+            const report = require('./audit-report.json');
+            const meta = report.metadata || {};
+            const vulns = meta.vulnerabilities || {};
+            console.log('=== npm audit report ===');
+            console.log('critical :', vulns.critical || 0);
+            console.log('high     :', vulns.high     || 0);
+            console.log('moderate :', vulns.moderate || 0);
+            console.log('low      :', vulns.low      || 0);
+            console.log('info     :', vulns.info     || 0);
+            const blocking = (vulns.critical || 0) + (vulns.high || 0);
+            if (blocking > 0) {
+              console.error('❌ Found ' + blocking + ' critical/high vulnerabilities!');
+              process.exit(1);
+            }
+            console.log('✅ No critical/high vulnerabilities found.');
+          "
+
+      - name: Upload audit report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: npm-audit-report-${{ github.sha }}
+          path: audit-report.json
+          retention-days: 30
+
+      - name: Add audit summary
+        if: always()
+        run: |
+          echo "## 🔒 Security Audit Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+          npm audit --audit-level=none 2>&1 | tail -20 >> $GITHUB_STEP_SUMMARY || true
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+
+  # ── 2. 授權合規性檢查 ────────────────────────────────────────────────────────
+  license-check:
+    name: 📋 License Check
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install license-checker
+        run: npm install -g license-checker
+
+      - name: Check licenses
+        run: |
+          license-checker \
+            --production \
+            --excludePrivatePackages \
+            --onlyAllow "MIT;ISC;Apache-2.0;BSD-2-Clause;BSD-3-Clause;CC0-1.0;CC-BY-3.0;CC-BY-4.0;Unlicense;0BSD;Python-2.0" \
+            --json > license-report.json || {
+              echo "❌ Found packages with disallowed licenses!"
+              cat license-report.json | head -100
+              exit 1
+            }
+          echo "✅ All production packages use allowed licenses."
+
+      - name: Upload license report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: license-report-${{ github.sha }}
+          path: license-report.json
+          retention-days: 30
+
+  # ── 3. Notify on failure（只在定時掃描失敗時）───────────────────────────────
+  notify-on-failure:
+    name: 🚨 Notify Security Issue
+    runs-on: ubuntu-latest
+    needs: [dependency-audit, license-check]
+    if: failure() && github.event_name == 'schedule'
+
+    steps:
+      - name: Create GitHub Issue on security failure
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const title = `🔒 Security Audit Failed — ${new Date().toISOString().split('T')[0]}`;
+            const body = `
+            ## 安全性稽核失敗
+
+            定時安全性掃描發現問題，請立即處理：
+
+            - **執行時間**: ${new Date().toISOString()}
+            - **Workflow**: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+
+            ### 處理步驟
+            1. 查看 [Workflow 詳情](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
+            2. 執行 \`npm audit\` 本地確認問題
+            3. 執行 \`npm audit fix\` 或手動升級套件
+            4. 建立 PR 並通過所有 CI 檢查後合併
+
+            /cc @${context.repo.owner}
+            `;
+
+            // 避免重複建立 issue（查找近 7 天是否已有同類 issue）
+            const { data: issues } = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open',
+              labels: 'security',
+              per_page: 5,
+            });
+
+            const existingIssue = issues.find(i => i.title.includes('Security Audit Failed'));
+            if (!existingIssue) {
+              await github.rest.issues.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                title,
+                body,
+                labels: ['security', 'high-priority'],
+              });
+            }

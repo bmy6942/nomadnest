@@ -1,0 +1,16 @@
+# 資料庫檔案
+prisma/dev.db
+prisma/dev.db-journal
+prisma/dev.db-shm
+prisma/dev.db-wal
+prisma/neon-migration.sql
+
+# 本地暫存
+.next
+node_modules
+uploads
+
+# 機密（.env 由 Vercel dashboard 管理，不上傳）
+.env
+.env.local
+.env.*.local

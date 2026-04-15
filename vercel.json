@@ -1,0 +1,16 @@
+{
+  "framework": "nextjs",
+  "buildCommand": "npx prisma generate && next build",
+  "installCommand": "npm install",
+  "regions": ["sin1"],
+  "crons": [
+    {
+      "path": "/api/cron/saved-search-notify",
+      "schedule": "0 * * * *"
+    },
+    {
+      "path": "/api/cron/lease-reminder",
+      "schedule": "0 9 * * *"
+    }
+  ]
+}

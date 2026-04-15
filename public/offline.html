@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#0f2033" />
+  <title>目前離線 / Offline — NomadNest Taiwan</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Noto Sans TC', sans-serif;
+      background: linear-gradient(135deg, #0f2033 0%, #1e3a5f 50%, #2563eb 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+    .card {
+      background: white;
+      border-radius: 20px;
+      padding: 48px 40px;
+      text-align: center;
+      max-width: 420px;
+      width: 100%;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.25);
+    }
+    .icon { font-size: 64px; margin-bottom: 20px; animation: pulse 2s infinite; }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.55} }
+    h1   { color: #1e293b; font-size: 20px; font-weight: 700; margin-bottom: 8px; line-height: 1.4; }
+    .sub { color: #64748b; font-size: 13px; margin-bottom: 4px; line-height: 1.5; }
+    .divider { border: none; border-top: 1px solid #e2e8f0; margin: 20px 0; }
+    .btn {
+      display: inline-block;
+      background: linear-gradient(135deg, #0f2033, #2563eb);
+      color: white;
+      padding: 12px 32px;
+      border-radius: 12px;
+      font-weight: 600;
+      font-size: 14px;
+      cursor: pointer;
+      border: none;
+      transition: opacity .2s;
+      margin-bottom: 20px;
+    }
+    .btn:hover { opacity: .85; }
+    .tips { text-align: left; background: #f8fafc; border-radius: 12px; padding: 16px; margin-top: 4px; }
+    .tips p { font-size: 12px; color: #64748b; margin-bottom: 6px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+    .tips ul { list-style: none; padding: 0; }
+    .tips li { font-size: 13px; color: #475569; padding: 3px 0 3px 18px; position: relative; }
+    .tips li::before { content: '•'; position: absolute; left: 4px; color: #94a3b8; }
+    .brand { margin-top: 24px; color: #94a3b8; font-size: 13px; }
+    .lang-toggle { display: flex; gap: 8px; justify-content: center; margin-bottom: 24px; }
+    .lang-btn {
+      padding: 4px 12px;
+      border-radius: 20px;
+      border: 1px solid #e2e8f0;
+      background: white;
+      font-size: 12px;
+      cursor: pointer;
+      color: #64748b;
+      transition: all .15s;
+    }
+    .lang-btn.active { background: #0f2033; color: white; border-color: #0f2033; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="icon">📡</div>
+
+    <div class="lang-toggle">
+      <button class="lang-btn active" onclick="setLang('zh')" id="btn-zh">繁中</button>
+      <button class="lang-btn" onclick="setLang('en')" id="btn-en">EN</button>
+    </div>
+
+    <h1 id="title">目前沒有網路連線</h1>
+    <p class="sub" id="sub1">NomadNest Taiwan 需要網路才能顯示最新的房源資訊。</p>
+    <p class="sub" id="sub2">請確認 Wi-Fi 或行動網路後再重試。</p>
+
+    <hr class="divider" />
+
+    <button class="btn" onclick="location.reload()" id="retry">🔄 重新連線</button>
+
+    <div class="tips">
+      <p id="tips-title">離線時仍可瀏覽：</p>
+      <ul>
+        <li id="tip1">最近造訪過的房源頁面</li>
+        <li id="tip2">已快取的搜尋結果</li>
+        <li id="tip3">你的收藏清單（需先登入）</li>
+      </ul>
+    </div>
+
+    <div class="brand">🏠 NomadNest Taiwan</div>
+  </div>
+
+  <script>
+    var STRINGS = {
+      zh: {
+        title:'目前沒有網路連線',
+        sub1:'NomadNest Taiwan 需要網路才能顯示最新的房源資訊。',
+        sub2:'請確認 Wi-Fi 或行動網路後再重試。',
+        retry:'🔄 重新連線',
+        tipsTitle:'離線時仍可瀏覽：',
+        tip1:'最近造訪過的房源頁面',
+        tip2:'已快取的搜尋結果',
+        tip3:'你的收藏清單（需先登入）',
+        lang:'zh-TW'
+      },
+      en: {
+        title:'You are offline',
+        sub1:'NomadNest Taiwan requires a network connection to show the latest listings.',
+        sub2:'Please check your Wi-Fi or mobile data and try again.',
+        retry:'🔄 Try Again',
+        tipsTitle:'Still available offline:',
+        tip1:'Recently visited listing pages',
+        tip2:'Cached search results',
+        tip3:'Your saved favorites (login required)',
+        lang:'en'
+      }
+    };
+
+    var cur = 'zh';
+    try {
+      var c = document.cookie.split(';').map(function(x){return x.trim();})
+               .find(function(x){return x.startsWith('NEXT_LOCALE=');});
+      if (c && c.indexOf('en') !== -1) cur = 'en';
+    } catch(e){}
+
+    function setLang(l) {
+      cur = l;
+      var s = STRINGS[l];
+      document.getElementById('title').textContent     = s.title;
+      document.getElementById('sub1').textContent      = s.sub1;
+      document.getElementById('sub2').textContent      = s.sub2;
+      document.getElementById('retry').textContent     = s.retry;
+      document.getElementById('tips-title').textContent= s.tipsTitle;
+      document.getElementById('tip1').textContent      = s.tip1;
+      document.getElementById('tip2').textContent      = s.tip2;
+      document.getElementById('tip3').textContent      = s.tip3;
+      document.documentElement.lang = s.lang;
+      document.getElementById('btn-zh').className = 'lang-btn'+(l==='zh'?' active':'');
+      document.getElementById('btn-en').className = 'lang-btn'+(l==='en'?' active':'');
+    }
+    setLang(cur);
+  </script>
+</body>
+</html>

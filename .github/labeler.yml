@@ -1,0 +1,51 @@
+# ────────────────────────────────────────────────────────────────────────────
+# PR 自動標籤規則（搭配 actions/labeler@v5）
+# 格式：
+#   '<label-name>':
+#     - changed-files:
+#         - any-glob-to-any-file: ['<pattern>']
+# ────────────────────────────────────────────────────────────────────────────
+
+'area: api':
+  - changed-files:
+      - any-glob-to-any-file: ['src/app/api/**']
+
+'area: frontend':
+  - changed-files:
+      - any-glob-to-any-file: ['src/components/**', 'src/app/**/page.tsx', 'src/app/**/layout.tsx']
+
+'area: i18n':
+  - changed-files:
+      - any-glob-to-any-file: ['messages/**', 'src/i18n/**']
+
+'area: database':
+  - changed-files:
+      - any-glob-to-any-file: ['prisma/**']
+
+'area: auth':
+  - changed-files:
+      - any-glob-to-any-file: ['src/lib/auth.ts', 'src/app/api/auth/**', 'src/middleware.ts']
+
+'area: testing':
+  - changed-files:
+      - any-glob-to-any-file: ['src/__tests__/**', 'e2e/**', 'vitest.config.ts', 'playwright.config.ts']
+
+'area: ci-cd':
+  - changed-files:
+      - any-glob-to-any-file: ['.github/**']
+
+'area: config':
+  - changed-files:
+      - any-glob-to-any-file: ['*.config.*', 'tsconfig.json', 'package.json', 'package-lock.json']
+
+'area: pwa':
+  - changed-files:
+      - any-glob-to-any-file: ['public/sw.js', 'public/offline.html', 'src/app/manifest.ts', 'src/components/InstallPrompt.tsx']
+
+'area: seo':
+  - changed-files:
+      - any-glob-to-any-file: ['src/lib/seo.ts', 'src/app/opengraph-image*']
+
+'security':
+  - changed-files:
+      - any-glob-to-any-file: ['src/lib/auth.ts', 'src/lib/rateLimit.ts', 'src/middleware.ts', 'src/app/api/auth/**']

@@ -1,0 +1,149 @@
+# ────────────────────────────────────────────────────────────────────────────
+# NomadNest Taiwan — E2E 端對端測試（Playwright）
+#
+# 觸發條件：
+#   - push 到 main（部署前驗收）
+#   - PR 到 main（合併前全流程確認）
+#   - 手動觸發（workflow_dispatch，可指定 browser）
+#
+# 優化：
+#   - npm ci + Node cache（節省 30~60s）
+#   - Playwright 瀏覽器快取（節省 2~3min）
+#   - Next.js build cache（節省 1~2min）
+#   - 失敗時上傳 screenshots + trace 供偵錯
+# ────────────────────────────────────────────────────────────────────────────
+name: E2E Tests
+
+on:
+  push:
+    branches: [main]
+    paths-ignore:
+      - '**.md'
+      - 'docs/**'
+  pull_request:
+    branches: [main]
+    paths-ignore:
+      - '**.md'
+      - 'docs/**'
+  workflow_dispatch:
+    inputs:
+      browser:
+        description: 'Browser to test with'
+        required: false
+        default: 'chromium'
+        type: choice
+        options: [chromium, firefox, webkit]
+
+# 同分支有新 push 時取消舊執行
+concurrency:
+  group: e2e-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  NODE_VERSION: '20'
+  NEXT_TELEMETRY_DISABLED: '1'
+
+jobs:
+  e2e:
+    name: 🎭 Playwright E2E
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Generate Prisma client
+        run: npx prisma generate
+
+      # ── Playwright 瀏覽器快取（節省 2~3 分鐘）────────────────────────────────
+      - name: Get Playwright version
+        id: playwright-version
+        run: echo "version=$(npx playwright --version | cut -d' ' -f2)" >> $GITHUB_OUTPUT
+
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        id: playwright-cache
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ steps.playwright-version.outputs.version }}
+          restore-keys: |
+            playwright-${{ runner.os }}-
+
+      - name: Install Playwright browsers
+        if: steps.playwright-cache.outputs.cache-hit != 'true'
+        run: npx playwright install ${{ inputs.browser || 'chromium' }} --with-deps
+
+      - name: Install browser system deps only (cache hit)
+        if: steps.playwright-cache.outputs.cache-hit == 'true'
+        run: npx playwright install-deps ${{ inputs.browser || 'chromium' }}
+
+      # ── Next.js Build 快取 ──────────────────────────────────────────────────
+      - name: Cache Next.js build
+        uses: actions/cache@v4
+        with:
+          path: .next/cache
+          key: nextjs-e2e-${{ runner.os }}-${{ hashFiles('package-lock.json') }}-${{ hashFiles('src/**/*.ts', 'src/**/*.tsx') }}
+          restore-keys: |
+            nextjs-e2e-${{ runner.os }}-${{ hashFiles('package-lock.json') }}-
+            nextjs-e2e-${{ runner.os }}-
+
+      # ── 設定測試資料庫 ──────────────────────────────────────────────────────
+      - name: Setup test database
+        run: npm run db:setup
+        env:
+          DATABASE_URL: file:./prisma/test.db
+
+      # ── 建置 Next.js ────────────────────────────────────────────────────────
+      - name: Build Next.js app
+        run: npm run build
+        env:
+          DATABASE_URL: file:./prisma/test.db
+          JWT_SECRET: ${{ secrets.JWT_SECRET || 'ci-e2e-secret-not-for-production' }}
+          NEXT_PUBLIC_BASE_URL: http://localhost:3001
+
+      # ── 執行 E2E 測試 ────────────────────────────────────────────────────────
+      - name: Run E2E tests
+        run: npx playwright test --reporter=github,html
+        env:
+          DATABASE_URL: file:./prisma/test.db
+          JWT_SECRET: ${{ secrets.JWT_SECRET || 'ci-e2e-secret-not-for-production' }}
+          NEXT_PUBLIC_BASE_URL: http://localhost:3001
+          BASE_URL: http://localhost:3001
+          CI: true
+
+      # ── 報告 & 產物 ─────────────────────────────────────────────────────────
+      - name: Upload Playwright HTML report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: playwright-report-${{ github.sha }}
+          path: playwright-report/
+          retention-days: 14
+
+      - name: Upload test traces on failure
+        uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-traces-${{ github.sha }}
+          path: test-results/
+          retention-days: 7
+
+      - name: Add E2E results to job summary
+        if: always()
+        run: |
+          echo "## 🎭 E2E Test Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Commit: \`${{ github.sha }}\`" >> $GITHUB_STEP_SUMMARY
+          if [ -f playwright-report/index.html ]; then
+            echo "📊 Full report available in Artifacts (playwright-report-${{ github.sha }})" >> $GITHUB_STEP_SUMMARY
+          fi

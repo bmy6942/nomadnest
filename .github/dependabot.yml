@@ -1,0 +1,87 @@
+# ────────────────────────────────────────────────────────────────────────────
+# Dependabot 自動依賴更新設定
+#
+# 策略：
+#   npm    — 每週一自動建立 PR，次要版本 / patch 自動合併（需設 branch rule）
+#   actions— 每週一自動更新 GitHub Actions 版本
+#
+# 自動合併條件（需在 Repository Settings 開啟 Auto-merge）：
+#   - Dependabot minor / patch PR 在所有 CI 通過後自動合併
+#   - major 版本更新需人工審查
+# ────────────────────────────────────────────────────────────────────────────
+version: 2
+
+updates:
+  # ── npm 套件更新 ──────────────────────────────────────────────────────────
+  - package-ecosystem: 'npm'
+    directory: '/'
+    schedule:
+      interval: 'weekly'
+      day: 'monday'
+      time: '09:00'
+      timezone: 'Asia/Taipei'
+    open-pull-requests-limit: 10
+    # PR 指派給 owner
+    assignees:
+      - 'bmy6942'
+    labels:
+      - 'dependencies'
+      - 'automated'
+    commit-message:
+      prefix: 'chore(deps)'
+      prefix-development: 'chore(dev-deps)'
+      include: 'scope'
+    # 忽略 major 版本自動更新（重大變更需人工確認）
+    ignore:
+      - dependency-name: 'next'
+        update-types: ['version-update:semver-major']
+      - dependency-name: 'react'
+        update-types: ['version-update:semver-major']
+      - dependency-name: 'react-dom'
+        update-types: ['version-update:semver-major']
+      - dependency-name: 'typescript'
+        update-types: ['version-update:semver-major']
+      - dependency-name: 'prisma'
+        update-types: ['version-update:semver-major']
+      - dependency-name: '@prisma/client'
+        update-types: ['version-update:semver-major']
+    # 分組更新（減少 PR 數量）
+    groups:
+      testing-libs:
+        patterns:
+          - '@testing-library/*'
+          - 'vitest'
+          - '@vitest/*'
+          - 'jsdom'
+          - '@playwright/test'
+      typescript-types:
+        patterns:
+          - '@types/*'
+      next-ecosystem:
+        patterns:
+          - 'next'
+          - 'eslint-config-next'
+      prisma:
+        patterns:
+          - 'prisma'
+          - '@prisma/*'
+
+  # ── GitHub Actions 版本更新 ───────────────────────────────────────────────
+  - package-ecosystem: 'github-actions'
+    directory: '/'
+    schedule:
+      interval: 'weekly'
+      day: 'monday'
+      time: '09:00'
+      timezone: 'Asia/Taipei'
+    open-pull-requests-limit: 5
+    labels:
+      - 'dependencies'
+      - 'github-actions'
+      - 'automated'
+    commit-message:
+      prefix: 'ci(actions)'
+    groups:
+      github-actions:
+        patterns:
+          - '*'

@@ -1,0 +1,28 @@
+# ────────────────────────────────────────────────────────────────────────────
+# Auto-label PR based on changed file paths
+# 自動依據 PR 修改的檔案路徑加上對應標籤
+# ────────────────────────────────────────────────────────────────────────────
+name: Auto Label
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+jobs:
+  label:
+    name: 🏷 Auto Label
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Label PR by changed files
+        uses: actions/labeler@v5
+        with:
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          configuration-path: .github/labeler.yml
+        continue-on-error: true  # 標籤失敗不阻擋 CI

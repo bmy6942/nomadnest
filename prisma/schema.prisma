@@ -1,0 +1,335 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DATABASE_URL_DIRECT")
+}
+
+model User {
+  id          String   @id @default(cuid())
+  name        String
+  email       String   @unique
+  password    String
+  role        String   @default("tenant") // tenant | landlord | admin
+  phone       String?
+  lineId      String?
+  avatar      String?
+  verified           Boolean  @default(false)
+  banned             Boolean  @default(false)
+  bio                String?
+  idDocUrl           String?  // 身分證/護照圖片 URL（驗證用）
+  verificationStatus String   @default("none") // emailPending | none | pending | approved | rejected
+  verificationNote    String?  // 管理員審核備註
+  onboardingCompleted Boolean  @default(false) // 是否完成新手引導
+  preferences         String   @default("[]")  // JSON：游牧偏好標籤 (tenant) 或 房源類型 (landlord)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  listings              Listing[]
+  applications          Application[]
+  reviewsGiven          Review[]        @relation("Reviewer")
+  favorites             Favorite[]
+  sentMessages          Message[]       @relation("MessageSender")
+  tenantConversations   Conversation[]  @relation("ConversationTenant")
+  landlordConversations Conversation[]  @relation("ConversationLandlord")
+  viewingRequests       ViewingRequest[]
+  reports               Report[]
+  savedSearches         SavedSearch[]
+  pushSubscriptions     PushSubscription[]
+}
+
+model Listing {
+  id           String   @id @default(cuid())
+  title        String
+  description  String
+  city         String
+  district     String
+  address      String
+  type         String   // 套房 | 雅房 | 整層公寓 | 共居空間
+  price        Int
+  deposit      Int
+  minRent      Int
+  maxRent      Int
+  wifiSpeed    Int
+  wifiVerified Boolean  @default(false)
+  hasDesk      Boolean  @default(true)
+  deskSize     String?
+  naturalLight Int      @default(3)
+  nearCowork   Int?
+  nearMRT      Int?
+  includedFees String   @default("[]")
+  amenities    String   @default("[]")
+  images       String   @default("[]")
+  status       String   @default("pending") // pending | active | rejected | inactive
+  foreignOk    Boolean  @default(false)
+  availableFrom String?  // 可入住日期 'YYYY-MM-DD'，null = 即可入住
+  lat          Float?   // 緯度（Google Maps 用）
+  lng          Float?   // 經度（Google Maps 用）
+  ownerId      String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  owner          User            @relation(fields: [ownerId], references: [id])
+  applications   Application[]
+  reviews        Review[]
+  favorites      Favorite[]
+  conversations  Conversation[]
+  viewingRequests ViewingRequest[]
+  views          ListingView[]
+
+  // ✅ 複合索引：最高頻查詢 (status + city + type + price)
+  @@index([status, city])
+  @@index([status, type])
+  @@index([status, createdAt(sort: Desc)])
+  @@index([ownerId, status])
+}
+
+model Application {
+  id          String   @id @default(cuid())
+  listingId   String
+  tenantId    String
+  message     String
+  moveInDate  String
+  duration    Int
+  status         String   @default("pending") // pending | approved | rejected | withdrawn
+  landlordReply  String?  // 房東回覆訊息（接受/婉拒時可附上說明）
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  listing     Listing   @relation(fields: [listingId], references: [id])
+  tenant      User      @relation(fields: [tenantId], references: [id])
+  contract    Contract? // 一張申請最多一份合約
+
+  // ✅ 高頻查詢索引：租客查自己的申請、房東查 pending 申請
+  @@index([tenantId, status])
+  @@index([listingId, status])
+}
+
+model Conversation {
+  id         String   @id @default(cuid())
+  listingId  String
+  tenantId   String
+  landlordId String
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  listing    Listing   @relation(fields: [listingId], references: [id])
+  tenant     User      @relation("ConversationTenant",   fields: [tenantId],   references: [id])
+  landlord   User      @relation("ConversationLandlord", fields: [landlordId], references: [id])
+  messages   Message[]
+
+  @@unique([listingId, tenantId])
+  // ✅ 索引：房東/租客查詢自己的對話
+  @@index([tenantId])
+  @@index([landlordId])
+}
+
+model Message {
+  id             String       @id @default(cuid())
+  conversationId String
+  senderId       String
+  content        String
+  hasContact     Boolean      @default(false) // 系統偵測到電話/LINE（跑單防止）
+  read           Boolean      @default(false)
+  createdAt      DateTime     @default(now())
+
+  conversation   Conversation @relation(fields: [conversationId], references: [id])
+  sender         User         @relation("MessageSender", fields: [senderId], references: [id])
+
+  // ✅ 高頻查詢索引：未讀訊息計算
+  @@index([conversationId, read, senderId])
+}
+
+model ViewingRequest {
+  id            String   @id @default(cuid())
+  listingId     String
+  tenantId      String
+  proposedTime1 String   // ISO 日期時間字串
+  proposedTime2 String?
+  proposedTime3 String?
+  confirmedTime String?
+  status        String   @default("pending") // pending | confirmed | cancelled | completed
+  notes         String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  listing       Listing  @relation(fields: [listingId], references: [id])
+  tenant        User     @relation(fields: [tenantId], references: [id])
+
+  // ✅ 高頻查詢索引：租客查看預約、房源查詢預約
+  @@index([tenantId])
+  @@index([listingId])
+}
+
+model Review {
+  id          String   @id @default(cuid())
+  listingId   String
+  reviewerId  String
+  rating      Int      // 1-5 整體
+  wifiRating  Int      // 1-5 Wi-Fi 實際表現
+  content     String
+  ownerReply  String?  // 房東回覆（可選）
+  createdAt   DateTime @default(now())
+
+  listing     Listing  @relation(fields: [listingId], references: [id])
+  reviewer    User     @relation("Reviewer", fields: [reviewerId], references: [id])
+
+  // ✅ 高頻查詢索引：房源評論列表、用戶評論歷史
+  @@index([listingId])
+  @@index([reviewerId])
+  // ✅ 同一租客對同一房源只能有一筆評價（DB 層唯一約束，防止競爭條件下的重複提交）
+  @@unique([listingId, reviewerId])
+}
+
+// 房源瀏覽紀錄（用於分析儀表板）
+model ListingView {
+  id        String   @id @default(cuid())
+  listingId String
+  visitorId String?  // null = 未登入訪客
+  createdAt DateTime @default(now())
+
+  listing   Listing  @relation(fields: [listingId], references: [id])
+
+  // ✅ 高頻查詢索引：房源瀏覽計數、時間範圍分析
+  @@index([listingId])
+  @@index([createdAt])
+}
+
+// 用戶檢舉紀錄
+model Report {
+  id             String   @id @default(cuid())
+  reporterId     String
+  targetType     String   // 'listing' | 'message' | 'user'
+  targetId       String
+  reason         String
+  detail         String?
+  status         String   @default("pending") // pending | resolved | dismissed
+  resolutionNote String?  // 管理員處理備註
+  createdAt      DateTime @default(now())
+
+  reporter   User     @relation(fields: [reporterId], references: [id])
+
+  // ✅ 高頻查詢索引：管理員過濾待處理/已處理檢舉
+  @@index([status])
+  @@index([reporterId])
+}
+
+model Favorite {
+  id        String   @id @default(cuid())
+  userId    String
+  listingId String
+  createdAt DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id])
+  listing   Listing  @relation(fields: [listingId], references: [id])
+
+  @@unique([userId, listingId])
+  // ✅ 高頻查詢索引：用戶收藏列表
+  @@index([userId])
+}
+
+// 儲存搜尋（用於新房源到貨通知）
+model SavedSearch {
+  id         String    @id @default(cuid())
+  userId     String
+  name       String    @default("我的搜尋")
+  city       String?
+  type       String?
+  maxPrice   Int?
+  minWifi    Int?
+  q          String?
+  createdAt  DateTime  @default(now())
+  lastSentAt DateTime? // 最後一次傳送通知的時間
+
+  user       User      @relation(fields: [userId], references: [id])
+
+  // ✅ 高頻查詢索引：用戶儲存搜尋列表
+  @@index([userId])
+}
+
+// Listing 可入住日期
+// （availableFrom: 字串 'YYYY-MM-DD'，null 表示即可入住）
+
+// 線上電子合約
+model Contract {
+  id            String   @id @default(cuid())
+  applicationId String   @unique   // 一張申請只能有一份合約
+  listingId     String
+  landlordId    String
+  tenantId      String
+
+  // 合約條款
+  rentAmount    Int
+  depositAmount Int
+  startDate     String   // 'YYYY-MM-DD'
+  endDate       String   // 'YYYY-MM-DD'
+  paymentDay    Int      @default(5)   // 每月幾號繳租
+  rules         String?  // 居住規則（自由文字）
+  utilities     String?  // 水電費說明
+  otherTerms    String?  // 其他條款
+
+  // 狀態：draft → pending_tenant → pending_landlord → completed | cancelled
+  status            String   @default("draft")
+
+  // 房東簽名
+  landlordSignedAt  DateTime?
+  landlordSignature String?  // Base64 canvas data URL
+
+  // 租客簽名
+  tenantSignedAt    DateTime?
+  tenantSignature   String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // 關聯
+  application Application @relation(fields: [applicationId], references: [id])
+
+  @@index([landlordId])
+  @@index([tenantId])
+  @@index([listingId])
+}
+
+// 租約到期提醒寄送紀錄（防止重複寄信）
+model LeaseReminder {
+  id            String   @id @default(cuid())
+  applicationId String
+  milestone     Int      // 30 = 30天前提醒, 7 = 7天前提醒
+  sentAt        DateTime @default(now())
+
+  @@unique([applicationId, milestone])
+  @@index([applicationId])
+}
+
+
+
+
+// Web Push 訂閱資料（每個用戶可有多裝置）
+model PushSubscription {
+  id        String   @id @default(cuid())
+  userId    String
+  endpoint  String   @unique
+  p256dh    String   // 加密公鑰
+  auth      String   // 認證密鑰
+  userAgent String?  // 裝置識別（可選）
+  createdAt DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+// ─── JWT Session Revocation ────────────────────────────────────────────────────
+// 儲存已撤銷的 JWT token（SHA-256 hash），防止登出後 Cookie 被重用。
+// expiresAt 為 JWT 自身的到期時間，定期清除過期記錄節省空間。
+model RevokedToken {
+  id        String   @id @default(cuid())
+  tokenHash String   @unique   // SHA-256(raw JWT)，64 hex chars
+  expiresAt DateTime            // = JWT exp 欄位（7 天後過期）
+  revokedAt DateTime @default(now())
+
+  @@index([expiresAt])          // 加速清除過期 token 的查詢
+}
