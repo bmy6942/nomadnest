@@ -3,8 +3,13 @@ import { cookies } from 'next/headers';
 import { prisma } from '@/lib/db';
 import jwt from 'jsonwebtoken';
 
-// ── 管理員 Email 白名單 ────────────────────────────────────────────────────────
-const ADMIN_EMAILS = ['bmy6942@gmail.com'];
+// ── 管理員 Email 白名單（從環境變數讀取，避免個人資料寫死在程式碼）────────────
+// Vercel 設定：ADMIN_EMAILS=your@gmail.com,other@gmail.com（逗號分隔）
+// 也會保留 DB 中已有 role='admin' 的用戶（見下方 isAdmin 判斷）
+const ADMIN_EMAILS = (process.env.ADMIN_EMAILS || '')
+  .split(',')
+  .map(e => e.trim().toLowerCase())
+  .filter(Boolean);
 
 interface GoogleUserInfo {
   id: string;
@@ -83,7 +88,9 @@ export async function GET(req: NextRequest) {
       },
     });
 
-    const isAdmin = ADMIN_EMAILS.includes(googleUser.email.toLowerCase());
+    // isAdmin：email 在白名單，OR 資料庫中已是 admin（合併帳號時保留角色）
+    const isAdmin = ADMIN_EMAILS.includes(googleUser.email.toLowerCase())
+      || user?.role === 'admin';
     let isNewUser = false;
 
     if (!user) {
