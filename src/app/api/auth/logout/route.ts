@@ -13,16 +13,17 @@ export async function POST() {
       if (payload) {
         const tokenHash = hashToken(token);
         const id = crypto.randomUUID();
-        // JWT exp 欄位是 UNIX 秒，轉換為 ISO 字串供 SQLite 使用
+        // JWT exp 欄位是 UNIX 秒，轉換為 Date 物件供 PostgreSQL 使用
         const expiresAt = payload.exp
-          ? new Date(payload.exp * 1000).toISOString()
-          : new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
+          ? new Date(payload.exp * 1000)
+          : new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
 
-        // INSERT OR IGNORE 防止重複登出時的唯一鍵衝突
-        // 使用 $executeRaw 繞過 Prisma client 型別限制（generate 在沙箱無法執行）
+        // ON CONFLICT DO NOTHING 防止重複登出時的唯一鍵衝突（PostgreSQL 語法）
+        // 使用 $executeRaw 繞過 Prisma client 型別限制
         await prisma.$executeRaw`
-          INSERT OR IGNORE INTO RevokedToken (id, tokenHash, expiresAt, revokedAt)
-          VALUES (${id}, ${tokenHash}, ${expiresAt}, datetime('now'))
+          INSERT INTO "RevokedToken" (id, "tokenHash", "expiresAt", "revokedAt")
+          VALUES (${id}, ${tokenHash}, ${expiresAt}, NOW())
+          ON CONFLICT ("tokenHash") DO NOTHING
         `;
 
         // 非同步清除過期舊記錄（不 await，不阻塞回應）

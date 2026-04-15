@@ -86,7 +86,7 @@ export function hashToken(rawToken: string): string {
  */
 export function cleanupExpiredRevokedTokens(): void {
   prisma
-    .$executeRaw`DELETE FROM RevokedToken WHERE expiresAt < datetime('now')`
+    .$executeRaw`DELETE FROM "RevokedToken" WHERE "expiresAt" < NOW()`
     .catch(() => { /* 靜默失敗，不影響主流程 */ });
 }
 
@@ -104,7 +104,7 @@ export async function getCurrentUser() {
     //    使用 $queryRaw 繞過 Prisma client 型別限制
     const tokenHash = hashToken(token);
     const rows = await prisma.$queryRaw<{ id: string }[]>`
-      SELECT id FROM RevokedToken WHERE tokenHash = ${tokenHash} LIMIT 1
+      SELECT id FROM "RevokedToken" WHERE "tokenHash" = ${tokenHash} LIMIT 1
     `;
     if (rows.length > 0) return null;
 
