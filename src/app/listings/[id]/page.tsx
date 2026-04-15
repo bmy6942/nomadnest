@@ -306,11 +306,6 @@ export default async function ListingDetailPage({ params }: { params: { id: stri
 
           {/* 相似房源推薦 */}
           <SimilarListings listingId={listing.id} city={listing.city} type={listing.type} />
-
-          {/* 個人化推薦（登入後依偏好顯示） */}
-          <div className="mt-8">
-            <RecommendationSection limit={4} className="card p-5" />
-          </div>
         </div>
 
         {/* Sidebar */}
@@ -407,6 +402,11 @@ export default async function ListingDetailPage({ params }: { params: { id: stri
             )}
           </div>
         </div>
+      </div>
+
+      {/* ── 個人化推薦（全寬，跳出三欄格線之外） ── */}
+      <div className="mt-10 pt-8 border-t border-gray-100">
+        <RecommendationSection limit={4} />
       </div>
 
       {/* ── 手機版黏性底部 CTA ── */}
