@@ -58,7 +58,7 @@ const nextConfig = {
       "font-src 'self' data:",
       // API 請求、WebSocket（訊息 SSE）
       // unpkg.com：Leaflet 的 prefetch/preconnect
-      "connect-src 'self' https://*.supabase.co https://*.supabase.in wss://*.supabase.co https://unpkg.com",
+      "connect-src 'self' https://*.supabase.co https://*.supabase.in wss://*.supabase.co https://unpkg.com https://nominatim.openstreetmap.org",
       // 地圖 iframe（LeafletMap / Google Maps）
       "frame-src 'self' https://www.google.com https://maps.google.com",
       // 禁止自己被嵌入其他 frame（比 X-Frame-Options 更現代）
