@@ -15,8 +15,10 @@ import { useEffect, useState, useCallback } from 'react';
 import Image from 'next/image';
 import { useTranslations } from '@/i18n/provider';
 
-const DISMISSED_KEY = 'nomadnest_install_dismissed_at';
-const DISMISS_TTL   = 30 * 24 * 60 * 60 * 1000; // 30 天
+const DISMISSED_KEY    = 'nomadnest_install_dismissed_at';
+const DISMISS_TTL      = 30 * 24 * 60 * 60 * 1000; // 30 天
+const SW_DISMISSED_KEY = 'nomadnest_sw_update_dismissed_at';
+const SW_DISMISS_TTL   = 24 * 60 * 60 * 1000; // 24 小時
 
 interface BeforeInstallPromptEvent extends Event {
   prompt: () => Promise<void>;
@@ -51,6 +53,23 @@ function isDismissed(): boolean {
 function markDismissed() {
   try {
     localStorage.setItem(DISMISSED_KEY, Date.now().toString());
+  } catch { /* ignore */ }
+}
+
+// ── SW 更新通知的靜音 ────────────────────────────────────────────
+function isSwUpdateSnoozed(): boolean {
+  try {
+    const ts = localStorage.getItem(SW_DISMISSED_KEY);
+    if (!ts) return false;
+    return Date.now() - parseInt(ts, 10) < SW_DISMISS_TTL;
+  } catch {
+    return false;
+  }
+}
+
+function snoozeSwUpdate() {
+  try {
+    localStorage.setItem(SW_DISMISSED_KEY, Date.now().toString());
   } catch { /* ignore */ }
 }
 
@@ -180,7 +199,7 @@ export default function InstallPrompt() {
   useEffect(() => {
     // ── SW 更新通知監聽 ─────────────────────────────────────────────────────
     const handleSwMessage = (event: MessageEvent) => {
-      if (event.data?.type === 'SW_UPDATED') {
+      if (event.data?.type === 'SW_UPDATED' && !isSwUpdateSnoozed()) {
         setSwUpdated(true);
       }
     };
@@ -243,7 +262,7 @@ export default function InstallPrompt() {
     return (
       <SwUpdateBanner
         onRefresh={handleSwRefresh}
-        onDismiss={() => setSwUpdated(false)}
+        onDismiss={() => { setSwUpdated(false); snoozeSwUpdate(); }}
       />
     );
   }
