@@ -304,6 +304,27 @@ export default function Navbar() {
 
   const isEmailPending = user?.verificationStatus === 'emailPending';
 
+  // ── 點選選單外部自動收起 ──────────────────────────────────────
+  const dropdownRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!open) return;
+    const handler = (e: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [open]);
+
+  // ── active 樣式輔助函式（橘色高亮） ─────────────────────────
+  const menuItemCls = (href: string, orange = false) => {
+    const isActive = pathname === href || (href !== '/' && pathname.startsWith(href));
+    if (isActive) return 'flex items-center gap-2 px-4 py-2 text-sm font-semibold text-orange-600 bg-orange-50 focus-visible:outline-none';
+    if (orange)   return 'flex items-center gap-2 px-4 py-2 text-sm text-orange-600 hover:bg-orange-50 focus-visible:outline-none focus-visible:bg-orange-50';
+    return 'flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 focus-visible:outline-none focus-visible:bg-gray-50';
+  };
+
   return (
     <>
     {/* Email 驗證提示橫幅 */}
@@ -390,7 +411,7 @@ export default function Navbar() {
           </>)}
 
           {user ? (
-            <div className="relative ml-1">
+            <div className="relative ml-1" ref={dropdownRef}>
               <button
                 onClick={() => setOpen(!open)}
                 aria-expanded={open}
@@ -410,24 +431,24 @@ export default function Navbar() {
               </button>
               {open && (
                 <div role="menu" aria-label={`${user.name}`} className="absolute right-0 mt-2 w-52 bg-white rounded-xl shadow-lg border border-gray-100 py-1 z-50">
-                  <Link role="menuitem" href="/dashboard"      onClick={() => setOpen(false)} className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 focus-visible:outline-none focus-visible:bg-gray-50">📊 {t('myDashboard')}</Link>
-                  <Link role="menuitem" href="/notifications"  onClick={() => setOpen(false)} className="flex items-center justify-between px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 focus-visible:outline-none focus-visible:bg-gray-50">
-                    <span>🔔 {t('notifCenter')}</span>
+                  <Link role="menuitem" href="/dashboard"      onClick={() => setOpen(false)} className={menuItemCls('/dashboard')}>📊 {t('myDashboard')}</Link>
+                  <Link role="menuitem" href="/notifications"  onClick={() => setOpen(false)} className={menuItemCls('/notifications')}>
+                    <span className="flex-1">🔔 {t('notifCenter')}</span>
                     {notifCount > 0 && <span aria-hidden="true" className="bg-orange-500 text-white text-xs px-1.5 py-0.5 rounded-full">{notifCount}</span>}
                   </Link>
-                  <Link role="menuitem" href="/messages"       onClick={() => setOpen(false)} className="flex items-center justify-between px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 focus-visible:outline-none focus-visible:bg-gray-50">
-                    <span>💬 {t('msgCenter')}</span>
+                  <Link role="menuitem" href="/messages"       onClick={() => setOpen(false)} className={menuItemCls('/messages')}>
+                    <span className="flex-1">💬 {t('msgCenter')}</span>
                     {unread > 0 && <span aria-hidden="true" className="bg-red-500 text-white text-xs px-1.5 py-0.5 rounded-full">{unread}</span>}
                   </Link>
-                  <Link role="menuitem" href="/profile"        onClick={() => setOpen(false)} className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 focus-visible:outline-none focus-visible:bg-gray-50">👤 {t('myProfile')}</Link>
-                  <Link role="menuitem" href="/favorites"      onClick={() => setOpen(false)} className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 focus-visible:outline-none focus-visible:bg-gray-50">❤️ {t('myFavorites')}</Link>
+                  <Link role="menuitem" href="/profile"        onClick={() => setOpen(false)} className={menuItemCls('/profile')}>👤 {t('myProfile')}</Link>
+                  <Link role="menuitem" href="/favorites"      onClick={() => setOpen(false)} className={menuItemCls('/favorites')}>❤️ {t('myFavorites')}</Link>
                   {(user.role === 'landlord' || user.role === 'admin') && (<>
-                    <Link role="menuitem" href="/submit"       onClick={() => setOpen(false)} className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 focus-visible:outline-none focus-visible:bg-gray-50">➕ {t('submitListing')}</Link>
-                    <Link role="menuitem" href="/applications" onClick={() => setOpen(false)} className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 focus-visible:outline-none focus-visible:bg-gray-50">📋 {t('appsMgmt')}</Link>
-                    <Link role="menuitem" href="/analytics"    onClick={() => setOpen(false)} className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 focus-visible:outline-none focus-visible:bg-gray-50">📊 {t('listingAnalytics')}</Link>
+                    <Link role="menuitem" href="/submit"       onClick={() => setOpen(false)} className={menuItemCls('/submit')}>➕ {t('submitListing')}</Link>
+                    <Link role="menuitem" href="/applications" onClick={() => setOpen(false)} className={menuItemCls('/applications')}>📋 {t('appsMgmt')}</Link>
+                    <Link role="menuitem" href="/analytics"    onClick={() => setOpen(false)} className={menuItemCls('/analytics')}>📊 {t('listingAnalytics')}</Link>
                   </>)}
                   {user.role === 'admin' && (
-                    <Link role="menuitem" href="/admin"        onClick={() => setOpen(false)} className="block px-4 py-2 text-sm text-orange-600 hover:bg-orange-50 focus-visible:outline-none focus-visible:bg-orange-50">⚙ {t('adminPanel')}</Link>
+                    <Link role="menuitem" href="/admin"        onClick={() => setOpen(false)} className={menuItemCls('/admin', true)}>⚙ {t('adminPanel')}</Link>
                   )}
                   <hr className="my-1 border-gray-100" />
                   <button role="menuitem" onClick={logout} className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 focus-visible:outline-none focus-visible:bg-red-50">{t('logout')}</button>
