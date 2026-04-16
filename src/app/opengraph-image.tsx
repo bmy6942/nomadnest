@@ -1,7 +1,6 @@
 /**
  * Next.js 14 自動 OG 圖片生成器（首頁 / 預設）
- * 路徑：/opengraph-image  ← 自動被 layout.ts metadata.openGraph.images 使用
- * 尺寸：1200 × 630 px（標準 OG 規格）
+ * 尺寸：1200 × 630 px（LINE / Twitter / Facebook 標準規格）
  */
 import { ImageResponse } from 'next/og';
 
@@ -18,135 +17,96 @@ export default function Image() {
           width: '100%',
           height: '100%',
           display: 'flex',
-          flexDirection: 'column',
-          background: 'linear-gradient(135deg, #0f2033 0%, #1a3a5c 60%, #0d2d4a 100%)',
+          background: 'linear-gradient(135deg, #0a1628 0%, #0f2033 45%, #0d2848 100%)',
           position: 'relative',
           overflow: 'hidden',
           fontFamily: 'sans-serif',
         }}
       >
-        {/* 背景裝飾圓圈 */}
-        <div
-          style={{
-            position: 'absolute',
-            top: -120,
-            right: -120,
-            width: 480,
-            height: 480,
-            borderRadius: '50%',
-            background: 'rgba(255,255,255,0.04)',
-          }}
-        />
-        <div
-          style={{
-            position: 'absolute',
-            bottom: -80,
-            left: -80,
-            width: 320,
-            height: 320,
-            borderRadius: '50%',
-            background: 'rgba(255,255,255,0.03)',
-          }}
-        />
+        {/* ── 背景裝飾：大圓 ── */}
+        <div style={{ position: 'absolute', top: -180, right: -180, width: 600, height: 600, borderRadius: '50%', background: 'rgba(37,99,235,0.08)', display: 'flex' }} />
+        <div style={{ position: 'absolute', bottom: -100, left: -100, width: 380, height: 380, borderRadius: '50%', background: 'rgba(255,200,60,0.05)', display: 'flex' }} />
 
-        {/* 主內容 */}
-        <div
-          style={{
-            display: 'flex',
-            flexDirection: 'column',
-            padding: '72px 80px',
-            height: '100%',
-          }}
-        >
+        {/* ── 左側：LOGO + 文案 ── */}
+        <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', padding: '72px 80px', flex: 1 }}>
+
           {/* Logo 行 */}
-          <div
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: 16,
-              marginBottom: 48,
-            }}
-          >
-            <div
-              style={{
-                fontSize: 48,
-                lineHeight: 1,
-              }}
-            >
+          <div style={{ display: 'flex', alignItems: 'center', gap: 20, marginBottom: 52 }}>
+            {/* Icon mark (SVG inline) */}
+            <div style={{
+              width: 64, height: 64, borderRadius: 16,
+              background: 'linear-gradient(160deg, #1a3a5c, #0f2033)',
+              border: '1.5px solid rgba(255,255,255,0.15)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              fontSize: 32,
+            }}>
               🏡
             </div>
-            <span
-              style={{
-                fontSize: 28,
-                fontWeight: 700,
-                color: '#ffffff',
-                letterSpacing: '-0.5px',
-              }}
-            >
-              NomadNest Taiwan
-            </span>
+            <div style={{ display: 'flex', flexDirection: 'column' }}>
+              <span style={{ fontSize: 30, fontWeight: 800, color: '#ffffff', letterSpacing: '-0.5px', lineHeight: 1 }}>
+                NomadNest
+              </span>
+              <span style={{ fontSize: 14, color: 'rgba(255,255,255,0.45)', letterSpacing: '3px', marginTop: 4 }}>
+                TAIWAN
+              </span>
+            </div>
           </div>
 
           {/* 主標題 */}
-          <div
-            style={{
-              fontSize: 60,
-              fontWeight: 800,
-              color: '#ffffff',
-              lineHeight: 1.15,
-              letterSpacing: '-1px',
-              marginBottom: 24,
-              flex: 1,
-            }}
-          >
-            數位游牧工作者的
-            <br />
-            台灣首選租屋平台
+          <div style={{ fontSize: 58, fontWeight: 800, color: '#ffffff', lineHeight: 1.15, letterSpacing: '-1px', marginBottom: 20 }}>
+            找到你的<span style={{ color: '#FFC83C' }}>游牧基地</span>
+          </div>
+          <div style={{ fontSize: 24, color: 'rgba(255,255,255,0.65)', marginBottom: 52, lineHeight: 1.5 }}>
+            台灣最懂游牧工作者的租屋媒合平台
           </div>
 
-          {/* 副標題 */}
-          <div
-            style={{
-              fontSize: 26,
-              color: 'rgba(255,255,255,0.75)',
-              marginBottom: 48,
-              lineHeight: 1.4,
-            }}
-          >
-            Wi-Fi 速度保證 · 線上合約 · 押金信託 · 外籍友善
-          </div>
-
-          {/* 底部標籤 */}
-          <div style={{ display: 'flex', gap: 16 }}>
-            {['🌐 Wi-Fi 驗證', '📄 線上合約', '🌍 外籍友善', '🏙 全台灣'].map(tag => (
-              <div
-                key={tag}
-                style={{
-                  background: 'rgba(255,255,255,0.12)',
-                  border: '1px solid rgba(255,255,255,0.2)',
-                  borderRadius: 8,
-                  padding: '8px 16px',
-                  fontSize: 18,
-                  color: 'rgba(255,255,255,0.9)',
-                }}
-              >
+          {/* 標籤列 */}
+          <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+            {['⚡ Wi-Fi 速度實測', '📄 線上合約', '🌍 外籍友善', '🏙 全台 25 城市'].map(tag => (
+              <div key={tag} style={{
+                background: 'rgba(255,255,255,0.08)',
+                border: '1px solid rgba(255,255,255,0.16)',
+                borderRadius: 8, padding: '10px 18px',
+                fontSize: 17, color: 'rgba(255,255,255,0.85)',
+              }}>
                 {tag}
               </div>
             ))}
           </div>
         </div>
 
-        {/* 右下角 URL */}
-        <div
-          style={{
-            position: 'absolute',
-            bottom: 32,
-            right: 48,
-            fontSize: 18,
-            color: 'rgba(255,255,255,0.4)',
-          }}
-        >
-          nomadnest.tw
+        {/* ── 右側：數據卡片 ── */}
+        <div style={{
+          display: 'flex', flexDirection: 'column', justifyContent: 'center',
+          gap: 16, padding: '72px 80px 72px 0', width: 280,
+        }}>
+          {[
+            { num: '41+', label: '上架房源' },
+            { num: '25', label: '覆蓋城市' },
+            { num: '5.0', label: '平均評分' },
+          ].map(item => (
+            <div key={item.label} style={{
+              background: 'rgba(255,255,255,0.06)',
+              border: '1px solid rgba(255,255,255,0.12)',
+              borderRadius: 16, padding: '22px 28px',
+              display: 'flex', flexDirection: 'column', alignItems: 'center',
+            }}>
+              <span style={{ fontSize: 44, fontWeight: 800, color: '#FFC83C', lineHeight: 1 }}>{item.num}</span>
+              <span style={{ fontSize: 15, color: 'rgba(255,255,255,0.55)', marginTop: 6 }}>{item.label}</span>
+            </div>
+          ))}
+        </div>
+
+        {/* ── 底部金色線條 ── */}
+        <div style={{
+          position: 'absolute', bottom: 0, left: 0, right: 0, height: 4,
+          background: 'linear-gradient(90deg, #FFC83C, #FF9F1C, #FFC83C)',
+          display: 'flex',
+        }} />
+
+        {/* URL */}
+        <div style={{ position: 'absolute', bottom: 18, right: 48, fontSize: 16, color: 'rgba(255,255,255,0.3)' }}>
+          nomadnest-sigma.vercel.app
         </div>
       </div>
     ),

@@ -341,10 +341,28 @@ export default function Navbar() {
 
         {/* Logo */}
         <Link href="/" className={LOGO_CLS}>
-          <span className="text-2xl">🏡</span>
+          {/* Brand mark SVG icon */}
+          <svg width="36" height="36" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <rect width="512" height="512" rx="100" fill="#0f2033"/>
+            <rect x="0" y="0" width="512" height="256" rx="100" fill="#1a3a5c" fillOpacity="0.4"/>
+            {/* Left bar */}
+            <rect x="72" y="182" width="38" height="226" rx="4" fill="white"/>
+            {/* Right bar */}
+            <rect x="402" y="182" width="38" height="226" rx="4" fill="white"/>
+            {/* Diagonal path */}
+            <polygon points="110,390 110,408 402,182 402,164" fill="white"/>
+            {/* Left roof */}
+            <polygon points="55,188 91,112 127,188" fill="white"/>
+            {/* Right roof */}
+            <polygon points="385,188 421,112 457,188" fill="white"/>
+            {/* Gold beacon dot */}
+            <circle cx="421" cy="100" r="13" fill="#FFC83C"/>
+            {/* Gold horizon */}
+            <rect x="72" y="416" width="368" height="14" rx="7" fill="#FFC83C"/>
+          </svg>
           <div>
-            <span className="font-bold text-nomad-navy text-lg">NomadNest</span>
-            <span className="text-xs text-gray-400 block -mt-1">Taiwan Beta</span>
+            <span className="font-bold text-nomad-navy text-lg leading-none">NomadNest</span>
+            <span className="text-[10px] text-gray-400 block tracking-widest mt-0.5">TAIWAN</span>
           </div>
         </Link>
 
