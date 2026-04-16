@@ -34,6 +34,8 @@ export default function ListingsContent() {
   const [sortBy, setSortBy] = useState(searchParams.get('sortBy') || 'newest');
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
   const [highlightId, setHighlightId] = useState<string | null>(null);
+  // 手機地圖模式：'map' 顯示地圖全螢幕，'list' 顯示列表面板
+  const [mobileMapPanel, setMobileMapPanel] = useState<'map' | 'list'>('map');
   const [page, setPage] = useState(Math.max(1, parseInt(searchParams.get('page') || '1')));
   const [totalPages, setTotalPages] = useState(1);
   const [total, setTotal] = useState(0);
@@ -550,9 +552,26 @@ export default function ListingsContent() {
 
           {/* ── MAP VIEW ── */}
           {viewMode === 'map' && (
-            <div className="flex gap-4 h-[70vh]">
-              {/* Map */}
-              <div className="flex-1 rounded-2xl overflow-hidden shadow-sm border border-gray-200" style={{ isolation: 'isolate', position: 'relative' }}>
+            <div className="flex flex-col sm:flex-row gap-4 h-[calc(100vh-220px)] sm:h-[70vh]">
+
+              {/* ── 手機切換 Tab（只在 sm 以下顯示） ── */}
+              <div className="flex sm:hidden gap-1 bg-gray-100 p-1 rounded-xl mb-1 shrink-0">
+                <button
+                  onClick={() => setMobileMapPanel('map')}
+                  className={`flex-1 py-2 rounded-lg text-sm font-medium transition-all ${mobileMapPanel === 'map' ? 'bg-white text-nomad-navy shadow-sm' : 'text-gray-500'}`}
+                >
+                  🗺️ 地圖
+                </button>
+                <button
+                  onClick={() => setMobileMapPanel('list')}
+                  className={`flex-1 py-2 rounded-lg text-sm font-medium transition-all ${mobileMapPanel === 'list' ? 'bg-white text-nomad-navy shadow-sm' : 'text-gray-500'}`}
+                >
+                  📋 列表 ({mapListings.length})
+                </button>
+              </div>
+
+              {/* Map — 手機：只在 'map' panel 顯示；桌機：永遠顯示 */}
+              <div className={`flex-1 rounded-2xl overflow-hidden shadow-sm border border-gray-200 ${mobileMapPanel === 'list' ? 'hidden sm:block' : 'block'}`} style={{ isolation: 'isolate', position: 'relative' }}>
                 {loading ? (
                   <div className="flex items-center justify-center h-full bg-gray-100 text-gray-400">
                     <div className="text-center"><div className="text-3xl mb-2">🗺️</div>{t('mapLoading')}</div>
@@ -567,8 +586,9 @@ export default function ListingsContent() {
                   <ListingMap listings={mapListings} onSelect={handleMapSelect} highlightId={highlightId} />
                 )}
               </div>
-              {/* Side list */}
-              <div className="w-72 shrink-0 overflow-y-auto space-y-3 pr-1">
+
+              {/* Side list — 手機：只在 'list' panel 顯示；桌機：永遠顯示 */}
+              <div className={`w-full sm:w-72 shrink-0 overflow-y-auto space-y-3 pr-1 ${mobileMapPanel === 'map' ? 'hidden sm:block' : 'block'}`}>
                 <p className="text-xs text-gray-400 px-1">
                   {t('mapCount', { count: String(mapListings.length) })}
                   {highlightId && (
